@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Inventory System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(155deg, #ffa1a1 0%, #6b0505 100%);
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 1000px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.329);
+      overflow: hidden;
+      padding: 0 0 24px 0;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 28px 36px 20px 36px;
+    }
+    .header h1 {
+      font-size: 50px;
+      font-weight: 700;
+      color: #750000;
+    }
+
+
+    /* ── Summary Cards ── */
+    .summary-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      padding: 0 36px 28px 36px;
+    }
+    .summary-card {
+      background: #ffffff;
+      border: 1px solid #f0f0f0;
+      border-radius: 16px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      border-radius: 0 4px 4px 0;
+    }
+    .summary-card.total::before { background: #22c55e; }
+    .summary-card.stock::before { background: #3b82f6; }
+
+    .summary-card .label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .summary-card .value {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+    .summary-card .change {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    .summary-card.total .change {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .summary-card.stock .change {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    /* ── Controls Bar ── */
+    .controls {
+      padding: 0 36px 24px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .controls-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px 20px;
+      flex: 1;
+      min-width: 0;
+      height: 54px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within {
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
+    }
+    .search-box .search-icon {
+      font-size: 1.1rem;
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: inherit;
+      font-size: 1rem;
+      color: #374151;
+      width: 100%;
+    }
+    .search-box input::placeholder { color: #9ca3af; }
+
+    .add-btn {
+      flex-shrink: 0;
+      height: 54px;
+      padding: 0 30px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6b0505, #991b1b);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 10px rgba(107, 5, 5, 0.35);
+      white-space: nowrap;
+    }
+    .add-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(107, 5, 5, 0.5);
+    }
+
+    .controls-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin-right: 4px;
+    }
+    .filter-pill {
+      padding: 12px 26px;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+      background: #ffffff;
+      color: #6b7280;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-pill:hover {
+      border-color: #6b0505;
+      color: #991b1b;
+    }
+    .filter-pill.active {
+      background: linear-gradient(135deg, #6b0505, #991b1b);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+    }
+
+    .sort-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sort-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .sort-dropdown {
+      padding: 12px 20px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #374151;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .sort-dropdown:focus { border-color: #06b6d4; }
+
+    /* ── Product List ── */
+    .list-section {
+      padding: 0 36px;
+    }
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .list-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .list-header span {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+    }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 26px;
+      background: #fafbfc;
+      border: 1px solid #f3f4f6;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .product-item:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      transform: translateY(-1px);
+    }
+    .product-item:last-child { margin-bottom: 0; }
+
+    .product-icon {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .product-icon.vegetables { background: #dcfce7; }
+    .product-icon.sweet { background: #fef3c7; }
+    .product-icon.snack { background: #ffe4e6; }
+    .product-icon.fruits { background: #e0e7ff; }
+
+    .product-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .product-info .name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+    .product-info .stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    .product-info .stats .up {
+      color: #16a34a;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .product-info .stats .down {
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #fef3c7;
+      color: #d97706;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .product-arrow {
+      color: #d1d5db;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+
+
+    /* ── Modal Overlay ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      animation: modalIn 0.25s ease;
+      overflow: hidden;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px 0 28px;
+    }
+    .modal-header h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .modal-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: none;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: #e5e7eb; color: #111827; }
+
+    .modal-body {
+      padding: 22px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 14px;
+    }
+    .form-row .form-group { flex: 1; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f9fafb;
+      color: #1f2937;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #6b0505;
+      box-shadow: 0 0 0 3px rgba(107, 5, 5, 0.08);
+    }
+    .form-group input::placeholder { color: #9ca3af; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 28px 24px 28px;
+    }
+    .modal-footer .btn-cancel {
+      padding: 11px 24px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #6b7280;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-footer .btn-cancel:hover { background: #f3f4f6; color: #111827; }
+
+    .modal-footer .btn-submit {
+      padding: 11px 28px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6b0505, #991b1b);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 10px rgba(107, 5, 5, 0.3);
+    }
+    .modal-footer .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(107, 5, 5, 0.4);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 420px) {
+      body { padding: 10px; }
+      .phone-frame { border-radius: 20px; }
+      .form-row { flex-direction: column; }
+      .modal { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>Product Inventory System</h1>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-section">
+      <div class="summary-card total">
+        <div class="label">Total Products</div>
+        <div class="value" id="totalProducts">0</div>
+        <div class="change">&#9650; 8.00%</div>
+      </div>
+      <div class="summary-card stock">
+        <div class="label">Stock in Hand</div>
+        <div class="value" id="stockInHand">0</div>
+        <div class="change">&#9650; 2.34%</div>
+      </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls">
+      <div class="controls-top">
+        <div class="search-box">
+          <span class="search-icon">&#128269;</span>
+          <input type="text" id="searchInput" placeholder="Search products...">
+        </div>
+        <button class="add-btn" id="addBtn">+ Add New Product</button>
+      </div>
+      <div class="controls-bottom">
+        <div class="filter-group">
+          <span class="filter-label">Filter by Category:</span>
+          <button class="filter-pill active" data-filter="all">All</button>
+          <button class="filter-pill" data-filter="Stationery">Stationery</button>
+          <button class="filter-pill" data-filter="Electronics">Electronics</button>
+          <button class="filter-pill" data-filter="Groceries">Grocery</button>
+        </div>
+        <div class="sort-group">
+          <span class="sort-label">Sort by:</span>
+          <select id="sortSelect" class="sort-dropdown">
+            <option value="default">Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="list-section">
+      <div class="list-header">
+        <h2>Products list</h2>
+        <span>See all</span>
+      </div>
+      <div id="productList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"></div>
+    </div>
+
+
+
+  </div>
+
+  <!-- Add Product Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Product</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" id="fName" placeholder="e.g. Wireless Mouse">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price ($)</label>
+            <input type="number" id="fPrice" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="fCategory">
+              <option value="Stationery">Stationery</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Groceries">Groceries</option>
+              <option value="Snacks">Snacks</option>
+              <option value="Dairy">Dairy</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Warranty</label>
+            <input type="text" id="fWarranty" placeholder="e.g. 1 Year (optional)">
+          </div>
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="date" id="fExpiry">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modalCancel">&#10005; Cancel</button>
+        <button class="btn-submit" id="modalSubmit">&#10003; Add Product</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class Product {
+      constructor(name, price, category) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+      }
+      getDetails() {
+        return `Product: ${this.name}, Category: ${this.category}, Price: $${this.price}`;
+      }
+    }
+
+    class ElectronicProduct extends Product {
+      constructor(name, price, category, warranty) {
+        super(name, price, category);
+        this.warranty = warranty;
+      }
+      getDetails() {
+        return `Product: ${this.name}, Category: ${this.category}, Price: $${this.price}, Warranty: ${this.warranty}`;
+      }
+    }
+
+    class GroceryProduct extends Product {
+      constructor(name, price, category, expiryDate) {
+        super(name, price, category);
+        this.expiryDate = expiryDate;
+      }
+      getDetails() {
+        return `Product: ${this.name}, Category: ${this.category}, Price: $${this.price}, Expiry Date: ${this.expiryDate}`;
+      }
+    }
+
+    const products = [
+      new GroceryProduct("Vegetables", 12.99, "Groceries", "2026-08-05"),
+      new GroceryProduct("Sweet Food", 8.49, "Snacks", "2026-09-15"),
+      new Product("Snack", 3.99, "Snacks"),
+      new GroceryProduct("Fruits", 15.99, "Groceries", "2026-07-30"),
+      new ElectronicProduct("Laptop", 999.99, "Electronics", "2 Years"),
+      new GroceryProduct("Milk", 3.49, "Dairy", "2026-08-10"),
+    ];
+
+    const productConfig = [
+      { icon: "🥬", iconClass: "vegetables", sold: 267, bought: 149, lowStock: false },
+      { icon: "🍩", iconClass: "sweet",      sold: 198, bought: 87,  lowStock: false },
+      { icon: "🍿", iconClass: "snack",      sold: 45,  bought: 42,  lowStock: true  },
+      { icon: "🍎", iconClass: "fruits",     sold: 312, bought: 104, lowStock: false },
+      { icon: "💻", iconClass: "fruits",     sold: 22,  bought: 18,  lowStock: false },
+      { icon: "🥛", iconClass: "sweet",      sold: 88,  bought: 60,  lowStock: false },
+    ];
+
+    const totalEl = document.getElementById("totalProducts");
+    const stockEl = document.getElementById("stockInHand");
+    const listEl  = document.getElementById("productList");
+    const searchInput = document.getElementById("searchInput");
+    const filterGroup = document.querySelector(".filter-group");
+    const sortSelect  = document.getElementById("sortSelect");
+    const addBtn        = document.getElementById("addBtn");
+    const modalOverlay  = document.getElementById("modalOverlay");
+    const modalClose    = document.getElementById("modalClose");
+    const modalCancel   = document.getElementById("modalCancel");
+    const modalSubmit   = document.getElementById("modalSubmit");
+    const fName         = document.getElementById("fName");
+    const fPrice        = document.getElementById("fPrice");
+    const fCategory     = document.getElementById("fCategory");
+    const fWarranty     = document.getElementById("fWarranty");
+    const fExpiry       = document.getElementById("fExpiry");
+
+    function animateValue(el, end, duration) {
+      let start = 0;
+      const step = Math.ceil(end / (duration / 16));
+      const timer = setInterval(() => {
+        start += step;
+        if (start >= end) { start = end; clearInterval(timer); }
+        el.textContent = start;
+      }, 16);
+    }
+
+    animateValue(totalEl, products.length, 400);
+
+    let totalStock = 0;
+    products.forEach((p, i) => { totalStock += productConfig[i].bought; });
+    animateValue(stockEl, totalStock, 500);
+
+    let currentFilter = "all";
+    let currentSort   = "default";
+
+    function renderProducts() {
+      listEl.innerHTML = "";
+      let filtered = products.slice();
+
+      if (currentFilter !== "all") {
+        filtered = filtered.filter(p => p.category === currentFilter);
+      }
+
+      const query = searchInput.value.toLowerCase().trim();
+      if (query) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query)
+        );
+      }
+
+      if (currentSort === "price-asc")  filtered.sort((a, b) => a.price - b.price);
+      if (currentSort === "price-desc") filtered.sort((a, b) => b.price - a.price);
+      if (currentSort === "name-asc")   filtered.sort((a, b) => a.name.localeCompare(b.name));
+      if (currentSort === "name-desc")  filtered.sort((a, b) => b.name.localeCompare(a.name));
+
+      filtered.forEach(p => {
+        const idx = products.indexOf(p);
+        const cfg = productConfig[idx];
+        const item = document.createElement("div");
+        item.className = "product-item";
+        item.innerHTML = `
+          <div class="product-icon ${cfg.iconClass}">${cfg.icon}</div>
+          <div class="product-info">
+            <div class="name">${p.name}</div>
+            <div class="stats">
+              <span class="up">&#9650; ${cfg.sold}</span>
+              <span class="down">&#9660; ${cfg.bought}</span>
+            </div>
+          </div>
+          ${cfg.lowStock ? '<span class="badge">Low Stock</span>' : ''}
+          <span class="product-arrow">&#8250;</span>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    renderProducts();
+
+    filterGroup.addEventListener("click", function(e) {
+      const pill = e.target.closest(".filter-pill");
+      if (!pill) return;
+      filterGroup.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentFilter = pill.getAttribute("data-filter");
+      renderProducts();
+    });
+
+    searchInput.addEventListener("input", renderProducts);
+    sortSelect.addEventListener("change", function() {
+      currentSort = this.value;
+      renderProducts();
+    });
+
+    function openModal() {
+      fName.value = "";
+      fPrice.value = "";
+      fCategory.value = "Stationery";
+      fWarranty.value = "";
+      fExpiry.value = "";
+      modalOverlay.classList.add("open");
+      setTimeout(() => fName.focus(), 100);
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove("open");
+    }
+
+    addBtn.addEventListener("click", openModal);
+    modalClose.addEventListener("click", closeModal);
+    modalCancel.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", function(e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    modalSubmit.addEventListener("click", function() {
+      const name = fName.value.trim();
+      const price = parseFloat(fPrice.value);
+      const category = fCategory.value;
+      const warranty = fWarranty.value.trim();
+      const expiry = fExpiry.value;
+
+      if (!name) { fName.focus(); return; }
+      if (isNaN(price) || price <= 0) { fPrice.focus(); return; }
+
+      const icons = { Stationery: "📒", Electronics: "💻", Groceries: "🥬", Snacks: "🍿", Dairy: "🥛" };
+      const iconClasses = { Stationery: "vegetables", Electronics: "fruits", Groceries: "vegetables", Snacks: "sweet", Dairy: "sweet" };
+
+      if (category === "Electronics" && warranty) {
+        products.push(new ElectronicProduct(name, price, category, warranty));
+      } else if ((category === "Groceries" || category === "Dairy") && expiry) {
+        products.push(new GroceryProduct(name, price, category, expiry));
+      } else {
+        products.push(new Product(name, price, category));
+      }
+
+      productConfig.push({ icon: icons[category] || "📦", iconClass: iconClasses[category] || "vegetables", sold: 0, bought: 0, lowStock: false });
+      totalEl.textContent = products.length;
+      let ts = 0;
+      products.forEach((p, i) => { ts += productConfig[i].bought; });
+      stockEl.textContent = ts;
+      renderProducts();
+      closeModal();
+    });
+  </script>
+
+</body>
+</html>
