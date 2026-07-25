@@ -287,6 +287,12 @@
     .product-icon.sweet { background: #fef3c7; }
     .product-icon.snack { background: #ffe4e6; }
     .product-icon.fruits { background: #e0e7ff; }
+    .product-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
 
     .product-info {
       flex: 1;
@@ -433,6 +439,65 @@
     }
     .form-group input::placeholder { color: #9ca3af; }
 
+    .file-upload {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .file-upload-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border: 1px dashed #d1d5db;
+      border-radius: 10px;
+      background: #f9fafb;
+      color: #6b7280;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .file-upload-label:hover {
+      border-color: #6b0505;
+      color: #6b0505;
+      background: #fef2f2;
+    }
+    .file-upload-label .upload-icon { font-size: 1.1rem; }
+    .file-upload input[type="file"] {
+      display: none;
+    }
+    .file-upload .file-name {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 180px;
+    }
+    .icon-preview {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #e5e7eb;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+    }
+    .icon-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .icon-preview .preview-placeholder {
+      font-size: 1.2rem;
+      color: #d1d5db;
+    }
+
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -574,6 +639,19 @@
             </select>
           </div>
         </div>
+        <div class="form-group">
+          <label>Product Icon *</label>
+          <div class="file-upload">
+            <label class="file-upload-label" for="fIcon">
+              <span class="upload-icon">&#128206;</span> Choose File
+            </label>
+            <input type="file" id="fIcon" accept="image/png,image/jpeg">
+            <span class="file-name" id="fileName">No file chosen</span>
+            <div class="icon-preview" id="iconPreview">
+              <span class="preview-placeholder">?</span>
+            </div>
+          </div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>Warranty</label>
@@ -658,6 +736,10 @@
     const fCategory     = document.getElementById("fCategory");
     const fWarranty     = document.getElementById("fWarranty");
     const fExpiry       = document.getElementById("fExpiry");
+    const fIcon         = document.getElementById("fIcon");
+    const fileName      = document.getElementById("fileName");
+    const iconPreview   = document.getElementById("iconPreview");
+    let uploadedIconURL = "";
 
     function animateValue(el, end, duration) {
       let start = 0;
@@ -704,8 +786,11 @@
         const cfg = productConfig[idx];
         const item = document.createElement("div");
         item.className = "product-item";
+        const iconContent = cfg.icon.startsWith("data:") || cfg.icon.startsWith("http")
+          ? '<img src="' + cfg.icon + '" alt="icon">'
+          : cfg.icon;
         item.innerHTML = `
-          <div class="product-icon ${cfg.iconClass}">${cfg.icon}</div>
+          <div class="product-icon ${cfg.iconClass}">${iconContent}</div>
           <div class="product-info">
             <div class="name">${p.name}</div>
             <div class="stats">
@@ -737,10 +822,26 @@
       renderProducts();
     });
 
+    fIcon.addEventListener("change", function() {
+      const file = this.files[0];
+      if (!file) return;
+      fileName.textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedIconURL = e.target.result;
+        iconPreview.innerHTML = '<img src="' + uploadedIconURL + '" alt="icon">';
+      };
+      reader.readAsDataURL(file);
+    });
+
     function openModal() {
       fName.value = "";
       fPrice.value = "";
       fCategory.value = "Stationery";
+      fIcon.value = "";
+      fileName.textContent = "No file chosen";
+      iconPreview.innerHTML = '<span class="preview-placeholder">?</span>';
+      uploadedIconURL = "";
       fWarranty.value = "";
       fExpiry.value = "";
       modalOverlay.classList.add("open");
@@ -762,13 +863,13 @@
       const name = fName.value.trim();
       const price = parseFloat(fPrice.value);
       const category = fCategory.value;
+      const icon = uploadedIconURL || "📦";
       const warranty = fWarranty.value.trim();
       const expiry = fExpiry.value;
 
       if (!name) { fName.focus(); return; }
       if (isNaN(price) || price <= 0) { fPrice.focus(); return; }
 
-      const icons = { Stationery: "📒", Electronics: "💻", Groceries: "🥬", Snacks: "🍿", Dairy: "🥛" };
       const iconClasses = { Stationery: "vegetables", Electronics: "fruits", Groceries: "vegetables", Snacks: "sweet", Dairy: "sweet" };
 
       if (category === "Electronics" && warranty) {
@@ -779,7 +880,7 @@
         products.push(new Product(name, price, category));
       }
 
-      productConfig.push({ icon: icons[category] || "📦", iconClass: iconClasses[category] || "vegetables", sold: 0, bought: 0, lowStock: false });
+      productConfig.push({ icon: icon, iconClass: iconClasses[category] || "vegetables", sold: 0, bought: 0, lowStock: false });
       totalEl.textContent = products.length;
       let ts = 0;
       products.forEach((p, i) => { ts += productConfig[i].bought; });
